@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>제이크봇 게시판</title>
+</head>
+<body>
+    <h1>제이크봇 게시판</h1>
+    <form action="/post" method="post">
+        <input type="text" name="title" placeholder="제목">
+        <input type="text" name="content" placeholder="내용">
+        <input type="submit" value="작성">
+    </form>
+    <hr>
+    <h2>게시글 목록</h2>
+    {% for post in posts %}
+        <h3>{{ post.title }}</h3>
+        <p>{{ post.content }}</p>
+    {% endfor %}
+</body>
+</html>
