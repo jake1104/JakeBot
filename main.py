@@ -1,5 +1,6 @@
 from PIL import Image
 import discord, datetime, msg_dic, random, math, os, base64, requests, io, builtins, contextlib
+from time import sleep
 
 msg_dict = msg_dic.msg_dic
 
@@ -40,17 +41,22 @@ async def on_message(message):
         ).replace(
             "\n", "\n  "
         ) + "\nexcept Exception as e:\n  err_msg = traceback.format_exc()\n  print(str(err_msg))"
-        python_input = msg.split('```python')[1].split('```')[-2]
-        await message.channel.send(f"Code(Python):\n```python\n{python_code}\n```")
-        new_stdout = io.StringIO()
-        input_func = lambda: python_input
-        with contextlib.redirect_stdout(new_stdout):
-            exec(python_code, {'input': input_func})
-        output = new_stdout.getvalue()
-        if output:
-            await message.channel.send(f"Input:\n```\n{python_input}\n```")
-            await message.channel.send(f"Output:\n```\n{output}\n```")
-
+            python_input_str = None
+            if len(msg.split('```python')[1].split('```')) == 3:
+                try:
+                    python_input_str = msg.split('```python')[1].split('```')[-2]
+                except Exception:
+                    pass
+            await message.channel.send(f"Code(Python):\n```python\n{python_code}\n```")
+            new_stdout = io.StringIO()
+            input_func = lambda: python_input
+            with contextlib.redirect_stdout(new_stdout):
+                exec(python_code, {'input': input_func})
+            output = new_stdout.getvalue()
+            if output:
+                if python_input_str not in [None, ""]:
+                    await message.channel.send(f"Input:\n```\n{python_input_str}\n```")
+                await message.channel.send(f"Output:\n```\n{output}\n```")
         elif msg.startswith('제이크봇 아스키아트 '):
             ASCII_CHARS = [
                 "@", "#", "$", "%", "?", "*", "+", ";", ":", ",", " "
@@ -74,7 +80,7 @@ async def on_message(message):
                 width, height = image.size
                 image = image.resize(
                     (35, int(height / width * 35 * (5 / 7)**2)))
-            except:
+            except Exception:
                 await message.channel.send(url + "은 잘못된 이미지 URL 입니다!")
             image = to_greyscale(image)
             ascii_str = pixel_to_ascii(image)
@@ -132,7 +138,7 @@ async def on_message(message):
             try:
                 userid = int(message.content[9:].replace("<", "").replace(
                     ">", "").replace("@", ""))
-            except:
+            except Exception:
                 await message.channel.send("정확히 멘션을 해주세요!")
             user = await message.guild.query_members(user_ids=[userid])
             user = user[0]
@@ -170,13 +176,11 @@ async def on_message(message):
                 if can:
                     time = int(msg[7:])
                     formsg = ""
-                    if time < 1 or time > 38:
+                    if time < 1 or time > 20:
                         await message.channel.send(
-                            "도배 명령어에서 도배 횟수는 38이하인 자연수만 가능합니다")
+                            "도배 명령어에서 도배 횟수는 20이하인 자연수만 가능합니다")
                     else:
-                        for i in range(time):
-                            formsg += f"{message.author.name}으로 인하여 <#998050422570889217>방에서 {time}번 도배\n"
-                    await message.channel.send(formsg)
+                        await message.channel.send(f"{message.author.name}으로 인하여 <#998050422570889217>방에서 {time}번 도배\n"*time)
             else:
                 await message.channel.send(
                     "도배 명령어는 <#998050422570889217>에서 실행해 주세요!")
@@ -191,20 +195,52 @@ async def on_message(message):
                                 len(msg_dic.msg_dic["제이크봇 아재개그"]) - 1)])
                 else:
                     await message.channel.send("10초과는 불가능합니다.")
-            except exception:
+            except Exception:
                 await message.channel.send("모르는 단어에요!")
+        elif msg in ["제이크봇 도넛", "제이크봇 Donut", "제이크봇 donut"]:
+            sent_msg = await message.channel.send("Donut...")
+            cnt = 20
+            donut_str=""
+            A, B = 0, 0
+            while cnt > 0: #*************#***************
+                cnt -= 1
+                z = [0] * 1760 #***#********************
+                b = [' '] * 1760 #****************************
+                for j in range(0,   628, 7):   #****************
+                    for i in range(0, 628         ,2): #***********
+                        c = math.sin(                 i); d = math.\
+                        cos(j) ; e                       = math.sin(A)
+                        f=math.sin                       ( j ) ; g = \
+                        math.cos(A                       ); h = d + 2
+                        D = 1 / (c                       * h * e + \
+                        f *  g + 5 );                 l=math.cos(i)
+                        m=math.cos(B);n =         math.sin(B)#*****
+                        t= c * h * g - f * e   ; x = int ( 40 + \
+                        30 * D * (l * h * m - t * n))#**********
+                        __y = int(12 + 15* D * (l * h * n + t * m))
+                        ____o = int(x +  80 * __y) #***************
+                        ______N = int(8 * ((f * e - c * d * g) * m - c * d * e - f * g - l * d * n))
+                        if 22 > __y and __y > 0 and x > 0 and 80 > x and D > z[____o]:
+                            z[____o] = D; b[____o] = "0,-~:;=!*#$@"[______N if ______N > 0 else 0]
+                for k in range(1761):
+                    donut_str += b[k] if k % 80 else '\n'
+                    A += 0.00004; B += 0.00002
+                await sent_msg.edit(content="Playing Donut...\n```"+donut_str+"```")
+                donut_str=""
+                sleep(0.5)
+            await sent_msg.edit(content="Donut is done!")
         else:
             try:
                 await message.channel.send(msg[5:] + "의 답은 " +
                                            str(eval(msg[5:])) + "입니다.")
-            except:
+            except Exception:
                 if msg[len(msg) - 1] == '!':
                     try:
                         await message.channel.send(
                             msg[5:] + "의 답은 " +
                             str(math.factorial(int(msg[5:len(msg) - 1]))) +
                             "입니다.")
-                    except:
+                    except Exception:
                         await message.channel.send("모르는 단어에요!")
                 else:
                     await message.channel.send("모르는 단어에요!")
