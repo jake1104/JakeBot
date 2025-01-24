@@ -1,6 +1,8 @@
 from PIL import Image
-import discord, datetime, msg_dic, random, math, os, base64, requests, io, builtins, contextlib
+import discord, datetime, msg_dic, random, math, os, base64, requests, io, builtins, contextlib, sys
 from time import sleep
+
+from gradio_client import Client
 
 msg_dict = msg_dic.msg_dic
 
@@ -10,7 +12,8 @@ from webserver import keep_alive
 
 client = discord.Client(intents=discord.Intents.all())
 
-TOKEN = os.environ['TOKEN']
+# TOKEN = os.environ['TOKEN']
+TOKEN = "TOKEN"
 
 
 @client.event
@@ -36,26 +39,30 @@ async def on_message(message):
                 (msg_dict[msg])[random.randint(0,
                                                len(msg_dict[msg]) - 1)])
         elif msg.startswith('제이크봇 파이썬\n'):
-            python_code = "import traceback\n"  +  (
-            "try:" + msg.split('```python')[1].split('```')[0]
-        ).replace(
-            "\n", "\n  "
-        ) + "\nexcept Exception as e:\n  err_msg = traceback.format_exc()\n  print(str(err_msg))"
+            python_code = "import traceback\n" + (
+                "try:" + msg.split('```python')[1].split('```')[0]
+            ).replace(
+                "\n", "\n  "
+            ) + "\nexcept Exception as e:\n  err_msg = traceback.format_exc()\n  print(str(err_msg))"
             python_input_str = None
             if len(msg.split('```python')[1].split('```')) == 3:
                 try:
-                    python_input_str = msg.split('```python')[1].split('```')[-2]
+                    python_input_str = msg.split('```python')[1].split(
+                        '```')[-2]
+                    python_input_list = python_input_str.split('\n')
                 except Exception:
                     pass
-            await message.channel.send(f"Code(Python):\n```python\n{python_code}\n```")
+            await message.channel.send(
+                f"Code(Python):\n```python\n{python_code}\n```")
             new_stdout = io.StringIO()
-            input_func = lambda: python_input
+            input_func = lambda: python_input_list.pop(0)
             with contextlib.redirect_stdout(new_stdout):
                 exec(python_code, {'input': input_func})
             output = new_stdout.getvalue()
             if output:
                 if python_input_str not in [None, ""]:
-                    await message.channel.send(f"Input:\n```\n{python_input_str}\n```")
+                    await message.channel.send(
+                        f"Input:\n```\n{python_input_str}\n```")
                 await message.channel.send(f"Output:\n```\n{output}\n```")
         elif msg.startswith('제이크봇 아스키아트 '):
             ASCII_CHARS = [
@@ -96,7 +103,7 @@ async def on_message(message):
             try:
                 byte = int(msg[9:11])
                 string = str.encode(msg[19:])
-                if msg[12:18] == 'encode':
+                if msg[12:18] == 'incode':
                     if byte == 16:
                         send = base64.b16encode(string)
                     elif byte == 32:
@@ -180,29 +187,37 @@ async def on_message(message):
                         await message.channel.send(
                             "도배 명령어에서 도배 횟수는 20이하인 자연수만 가능합니다")
                     else:
-                        await message.channel.send(f"{message.author.name}으로 인하여 <#998050422570889217>방에서 {time}번 도배\n"*time)
+                        await message.channel.send(
+                            f"{message.author.name}으로 인하여 <#998050422570889217>방에서 {time}번 도배\n"
+                            * time)
             else:
                 await message.channel.send(
                     "도배 명령어는 <#998050422570889217>에서 실행해 주세요!")
-        elif msg.startswith("제이크봇 아재개그 "):
+        elif msg.startswith("제이크봇 아재개그"):
             try:
                 count = int(msg[10:])
                 if count <= 10:
+                    humor_list = msg_dic.msg_dic["제이크봇 아재개그"]
                     for i in range(count):
-                        await message.channel.send(
-                            msg_dic.msg_dic["제이크봇 아재개그"][random.randint(
-                                0,
-                                len(msg_dic.msg_dic["제이크봇 아재개그"]) - 1)])
+                        humor = humor_list[random.randint(0, len(humor_list) - 1)]
+                        humor_list.remove(humor)
+                        await message.channel.send(humor)
+                    del humor_list
                 else:
                     await message.channel.send("10초과는 불가능합니다.")
             except Exception:
                 await message.channel.send("모르는 단어에요!")
-        elif msg in ["제이크봇 도넛", "제이크봇 Donut", "제이크봇 donut"]:
+        elif f"{msg.split()[0]} {msg.split()[1]}" in [
+                "제이크봇 도넛", "제이크봇 Donut", "제이크봇 donut"
+        ]:
             sent_msg = await message.channel.send("Donut...")
-            cnt = 20
-            donut_str=""
+            try:
+                cnt = max(0, min(int(msg.split()[-1]), 50))
+            except Exception:
+                cnt = 20
+            donut_str = ""
             A, B = 0, 0
-            while cnt > 0: #*************#***************
+            while cnt > 0:  #*************#***************
                 cnt -= 1
                 z = [0] * 1760 #***#********************
                 b = [' '] * 1760 #****************************
@@ -222,37 +237,53 @@ async def on_message(message):
                         ______N = int(8 * ((f * e - c * d * g) * m - c * d * e - f * g - l * d * n))
                         if 22 > __y and __y > 0 and x > 0 and 80 > x and D > z[____o]:
                             z[____o] = D; b[____o] = "0,-~:;=!*#$@"[______N if ______N > 0 else 0]
+                print('\x1b[H', end='')
                 for k in range(1761):
                     donut_str += b[k] if k % 80 else '\n'
-                    A += 0.00004; B += 0.00002
-                await sent_msg.edit(content="Playing Donut...\n```"+donut_str+"```")
-                donut_str=""
-                sleep(0.5)
+                    A += 0.00004
+                    B += 0.00002
+                await sent_msg.edit(content="Playing Donut...\n```" +
+                                    donut_str + "```")
+                donut_str = ""
+                sleep(0.2)
             await sent_msg.edit(content="Donut is done!")
+        elif msg in ["제이크봇 꺼져", "제이크봇 ㄲㅈ"]:
+            if random.randint(0, 1) == 1:
+                await message.channel.send("제이크봇 전원 off(진짜로 꺼짐)")
+                sys.exit()
+            else:
+                await message.channel.send("욕하지 마세요")
+        elif msg in ['제이크봇 시계', "제이크봇 시간"]:
+            now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+            clock = await message.channel.send("{}:{}:{}".format(
+                now.hour, now.minute, now.second))
+            await clock.edit(
+                content="{}:{}:{}".format(now.hour, now.minute, now.second))
         else:
             try:
                 await message.channel.send(msg[5:] + "의 답은 " +
                                            str(eval(msg[5:])) + "입니다.")
             except Exception:
-                if msg[len(msg) - 1] == '!':
-                    try:
-                        await message.channel.send(
-                            msg[5:] + "의 답은 " +
-                            str(math.factorial(int(msg[5:len(msg) - 1]))) +
-                            "입니다.")
-                    except Exception:
-                        await message.channel.send("모르는 단어에요!")
-                else:
+                try:
+                    ai_client = Client("mangostin2010/freegpt4o")
+                    result = ai_client.predict(
+                        message=msg + "300자 이내로 답해줘",
+                        api_name="/chat"
+                    )
+                    await message.channel.send(result)
+                except Exception:
                     await message.channel.send("모르는 단어에요!")
     else:
-        idle += 1
-        if idle == 18:
+        idle += random.randint(500,1200)/1000
+        if 28 > idle > 27:
             idle = 0
             await message.channel.send("야!!!")
-        elif idle == 12:
+        elif 21 > idle > 20:
             await message.channel.send("나도 대화 끼어 달라고!")
-        elif idle == 10:
+            idle = 21
+        elif 16 > idle > 15:
             await message.channel.send("나도 대화 끼어줘")
+            idle=16
 
 
 keep_alive()
