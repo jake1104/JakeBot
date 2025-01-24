@@ -13,11 +13,12 @@ except FileNotFoundError:
 def home():
     return render_template('home.html', posts=posts)
 
-@app.route('/post', methods=['POST'])
+@app.route('/create', methods=['GET'])
 def post():
     title = request.form.get('title')
     content = request.form.get('content')
-    posts.append({'title': title, 'content': content})
+    if not (title == content == "" or title == content == " "):
+        posts.append({'title': title, 'content': content})
 
     with open('posts.txt', 'w', encoding='utf-8') as f:
         for post in posts:
@@ -25,7 +26,7 @@ def post():
 
     return render_template('home.html', posts=posts)
 
-@app.route('/post/<int:post_id>')
+@app.route('/<int:post_id>')
 def show_post(post_id):
     if 0 < post_id <= len(posts):
         return render_template('post.html', post=posts[post_id - 1])
